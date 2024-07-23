@@ -1,0 +1,16 @@
+# Virtual environment
+venv/
+
+# Streamlit specific environment variables
+.streamlit/secrets.toml
+
+# Python pycache
+__pycache__/
+functions/__pycache__/
+*.pyc
+
+# Mac files
+.DS_Store
+
+# Temp files
+temp_data/

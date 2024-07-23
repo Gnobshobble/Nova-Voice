@@ -1,0 +1,6 @@
+[theme]
+primaryColor = '#1a73e8'
+backgroundColor = '#121212'          # Dark background color
+secondaryBackgroundColor = '#1e1e1e' # Slightly lighter dark color for secondary background
+textColor = '#ffffff'                # White text color for better contrast
+font = 'sans serif'
