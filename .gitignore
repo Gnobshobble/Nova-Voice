@@ -1,5 +1,6 @@
 # Virtual environment
 venv/
+.venv/
 
 # Streamlit specific environment variables
 .streamlit/secrets.toml
