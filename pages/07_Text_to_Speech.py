@@ -4,6 +4,7 @@ from openai import OpenAI
 st.title("Text to Speech")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+tts_output = None
 
 def get_tts_output():
     response = client.audio.speech.create(
@@ -11,6 +12,8 @@ def get_tts_output():
         voice=tts_voice,
         input=tts_input
     )
+    response.write_to_file("output/output.mp3")
+    return response
 
 with st.form("OpenAI TTS"):
     tts_input = st.text_area("Input text to read aloud", placeholder="Enter text here...", max_chars=4096)
@@ -24,6 +27,9 @@ with st.form("OpenAI TTS"):
         else:
             with st.spinner("Retrieving text to speech output..."):
                 tts_output = get_tts_output()
+
+if tts_output:
+    st.audio('output/output.mp3', format='audio/mp3')
 
 
 
