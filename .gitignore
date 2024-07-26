@@ -15,4 +15,5 @@ functions/__pycache__/
 
 # Temp files
 temp_data/
+output/
 secrets.toml.example
