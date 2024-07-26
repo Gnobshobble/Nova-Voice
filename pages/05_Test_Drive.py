@@ -11,17 +11,22 @@ from prompts.test_drive import opening_message, system_prompt
 st.title("Test Drive the Course!")
 
 def get_latex_from_message(text):
-    print(f'text: {text}')
     # check if text contains LaTeX inline delimiters "\(...\)" "\[...\]"
     latex = re.findall(r"\\\(.*?\\\)|\\\[.*?\\\]", text)
-    print(f'latex extracted: {latex}')
     return latex
 
-def render_messages():
-    for message in st.session_state["messages"]:
-        if message["role"] != "system":
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+def render_messages(single_message=None):
+    if single_message:
+        with st.container():
+            if single_message["role"] != "system":
+                with st.chat_message(single_message["role"]):
+                    st.markdown(single_message["content"])
+    else:
+        with st.container():
+            for message in st.session_state["messages"]:
+                if message["role"] != "system":
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
 
 
 # Check if the user is logged in
@@ -72,7 +77,8 @@ else:
             st.session_state["messages"].append(
                 {"role": "assistant", "content": formatted_opening_message}
             )
-
+    st.empty()
+    st.toggle(label="toggle_label", key="toggle_TTS")
     with col2:
         if st.button("Save the lesson!", type="primary"):
             data = {
@@ -95,23 +101,21 @@ else:
 
     if prompt := st.chat_input("Take your course for a spin!"):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                stream=True,
-            )
-            response = st.write_stream(stream)
-            print(response)
+        
+        render_messages(single_message={"role": "user", "content": prompt})
+        with st.container():
+            with st.chat_message("assistant"):
+                stream = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ],
+                    stream=True,
+                )
+                response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
         # re render the most recent message with LaTeX previews
-        
         latex_to_render = get_latex_from_message(response)
         if latex_to_render:
             with st.popover("Latex Preview"):
