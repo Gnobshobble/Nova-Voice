@@ -7,8 +7,12 @@ from prompts.test_drive import system_prompt, opening_message
 from functions.utils import ensure_session_state
 from openai import OpenAI
 from prompts.test_drive import opening_message, system_prompt
+from st_audiorec import st_audiorec
+from openai import OpenAI
 
 st.title("Test Drive the Course!")
+if not st.session_state.get("default_text"):
+    st.session_state.default_text = "some text"
 
 def get_latex_from_message(text):
     print(f'text: {text}')
@@ -91,9 +95,28 @@ else:
 
     
     # Render messages except for the system prompt
-    render_messages()
 
-    if prompt := st.chat_input("Take your course for a spin!"):
+    render_messages()
+    sample = ""
+    wav_audio_data = st_audiorec()
+    client = OpenAI()
+    if wav_audio_data is not None:
+        with open("audio_file.wav", "wb") as file:
+            file.write(wav_audio_data)
+
+        audio_file= open("audio_file.wav", "rb")
+        transcription = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file=audio_file
+        )
+        sample = transcription.text
+        print(sample)
+
+    if (chat_input := st.chat_input("Take your course for a spin!")) or (sample != ""):
+        if chat_input != None:
+            prompt = chat_input
+        else:
+            prompt = sample
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -110,6 +133,7 @@ else:
             response = st.write_stream(stream)
             print(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
+        
         # re render the most recent message with LaTeX previews
         
         latex_to_render = get_latex_from_message(response)
@@ -119,3 +143,5 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
+        render_messages()
+
