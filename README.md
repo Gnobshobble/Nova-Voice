@@ -1,5 +1,7 @@
 # Curriculum Generation Module
 
+This is the branch
+
 Welcome to the Curriculum Generation Module project! This README file will guide you through the steps to set up the repository and start working on the project. The application is built on Streamlit and can be run both locally or as a hosted app with Streamlit.
 
 ## Table of Contents
