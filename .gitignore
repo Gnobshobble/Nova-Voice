@@ -1,5 +1,6 @@
 # Virtual environment
 venv/
+.venv/
 
 # Streamlit specific environment variables
 .streamlit/secrets.toml
@@ -14,5 +15,6 @@ functions/__pycache__/
 
 # Temp files
 temp_data/
-secrets.toml.example
+audio_file.wav
 output/
+secrets.toml.example

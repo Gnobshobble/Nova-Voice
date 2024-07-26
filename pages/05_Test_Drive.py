@@ -7,21 +7,30 @@ from prompts.test_drive import system_prompt, opening_message
 from functions.utils import ensure_session_state
 from openai import OpenAI
 from prompts.test_drive import opening_message, system_prompt
+from st_audiorec import st_audiorec
+from openai import OpenAI
 
 st.title("Test Drive the Course!")
+if not st.session_state.get("default_text"):
+    st.session_state.default_text = "some text"
 
 def get_latex_from_message(text):
-    print(f'text: {text}')
     # check if text contains LaTeX inline delimiters "\(...\)" "\[...\]"
     latex = re.findall(r"\\\(.*?\\\)|\\\[.*?\\\]", text)
-    print(f'latex extracted: {latex}')
     return latex
 
-def render_messages():
-    for message in st.session_state["messages"]:
-        if message["role"] != "system":
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+def render_messages(single_message=None):
+    if single_message:
+        with st.container():
+            if single_message["role"] != "system":
+                with st.chat_message(single_message["role"]):
+                    st.markdown(single_message["content"])
+    else:
+        with st.container():
+            for message in st.session_state["messages"]:
+                if message["role"] != "system":
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
 
 
 # Check if the user is logged in
@@ -72,7 +81,8 @@ else:
             st.session_state["messages"].append(
                 {"role": "assistant", "content": formatted_opening_message}
             )
-
+    st.empty()
+    st.toggle(label="toggle_label", key="toggle_TTS")
     with col2:
         if st.button("Save the lesson!", type="primary"):
             data = {
@@ -91,39 +101,45 @@ else:
 
     
     # Render messages except for the system prompt
+
     render_messages()
-    ## Changes
-    # c = st.empty()
-    # st.write()
-    # st.write()
- 
-    st.write("First Element")
+    sample = ""
+    wav_audio_data = st_audiorec()
+    client = OpenAI()
+    if wav_audio_data is not None:
+        with open("audio_file.wav", "wb") as file:
+            file.write(wav_audio_data)
 
-# Adding vertical space
-    st.write("") 
+        audio_file= open("audio_file.wav", "rb")
+        transcription = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file=audio_file
+        )
+        sample = transcription.text
+        print(sample)
 
-# Adding the second element
-    st.write("Second Element")
-    
-    if prompt := st.chat_input("Take your course for a spin!"):
+    if (chat_input := st.chat_input("Take your course for a spin!")) or (sample != ""):
+        if chat_input != None:
+            prompt = chat_input
+        else:
+            prompt = sample
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-    
-        with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                stream=True,
-            )
-            response = st.write_stream(stream)
-            print(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        # re render the most recent message with LaTeX previews
         
+        render_messages(single_message={"role": "user", "content": prompt})
+        with st.container():
+            with st.chat_message("assistant"):
+                stream = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ],
+                    stream=True,
+                )
+                response = st.write_stream(stream)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        
+        # re render the most recent message with LaTeX previews
         latex_to_render = get_latex_from_message(response)
         if latex_to_render:
             with st.popover("Latex Preview"):
@@ -131,3 +147,5 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
+        render_messages()
+
