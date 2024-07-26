@@ -92,12 +92,24 @@ else:
     
     # Render messages except for the system prompt
     render_messages()
+    ## Changes
+    # c = st.empty()
+    # st.write()
+    # st.write()
+ 
+    st.write("First Element")
 
+# Adding vertical space
+    st.write("") 
+
+# Adding the second element
+    st.write("Second Element")
+    
     if prompt := st.chat_input("Take your course for a spin!"):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-
+    
         with st.chat_message("assistant"):
             stream = client.chat.completions.create(
                 model="gpt-4o",
