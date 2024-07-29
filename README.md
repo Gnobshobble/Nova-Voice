@@ -28,18 +28,15 @@ Before you begin, make sure you have the following:
 
 1. **Create a `secrets.toml` file:**
 
-   If you can see the `curriculum_gen_module/.streamlit/secrets.toml.example` file, you'll need to create a `secrets.toml` file based on this example. Populate it with the following values:
+   If you can see the `GITHUB_REPO_NAME/.streamlit/secrets.toml.example` file, you'll need to create a `secrets.toml` file based on this example. Populate it with the following values:
 
    ```toml
-   [api_keys]
    OPENAI_API_KEY = "your_openai_api_key"
    GOOGLE_API_KEY = "your_google_api_key"
    YOUTUBE_API_KEY = "your_youtube_api_key"
 
-   [auth]
    PASSWORD = "password"
 
-   [other]
    # Add any other required environment variables here
    ```
 
@@ -47,11 +44,11 @@ Before you begin, make sure you have the following:
 
 1. **Install Python:**
 
-   Make sure you have Python 3.9, 3.10, or 3.11 installed. You can download it from the [official Python website](https://www.python.org/).
+   Make sure you have Python 3.9 or newer installed. You can download it from the [official Python website](https://www.python.org/).
 
 2. **Create a Virtual Environment:**
 
-   Navigate to the `curriculum_gen_module` directory from the base directory of the repository and create a virtual environment:
+   Navigate to the base directory of the repository and create a virtual environment:
    Ex. from ~/github/nova-streamlit
    ```sh
    cd curriculum_gen_module
