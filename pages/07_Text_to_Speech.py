@@ -13,11 +13,11 @@ def get_tts_output():
         input=tts_input,
         response_format="wav"
     ) as response:
-        with open("output/output.wav", "wb") as file:
+        with open("temp_data/output.wav", "wb") as file:
             for chunk in response.iter_bytes(1024):
                 file.write(chunk)
 
-    st.audio("output/output.wav", "audio/wav")
+    st.audio("temp_data/output.wav", "audio/wav")
 
 
 
