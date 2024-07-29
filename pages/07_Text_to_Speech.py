@@ -1,6 +1,5 @@
 import streamlit as st
 from openai import OpenAI
-# import pyaudio
 
 st.title("Text to Speech")
 
