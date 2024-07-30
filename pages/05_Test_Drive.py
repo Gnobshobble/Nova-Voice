@@ -147,5 +147,4 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
-        render_messages()
 
