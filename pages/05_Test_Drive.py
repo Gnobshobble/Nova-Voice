@@ -103,9 +103,10 @@ else:
     # Render messages except for the system prompt
 
     render_messages()
-    sample = ""
+    
     wav_audio_data = st_audiorec()
     client = OpenAI()
+    sample = ""
     if wav_audio_data is not None:
         with open("audio_file.wav", "wb") as file:
             file.write(wav_audio_data)
@@ -118,11 +119,15 @@ else:
         sample = transcription.text
         print(sample)
 
+
     if (chat_input := st.chat_input("Take your course for a spin!")) or (sample != ""):
+        print(chat_input)
         if chat_input != None:
             prompt = chat_input
+            print("aaa")
         else:
             prompt = sample
+        print(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         render_messages(single_message={"role": "user", "content": prompt})
@@ -147,4 +152,6 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
-
+        
+    with st.sidebar:
+        st.navigation
