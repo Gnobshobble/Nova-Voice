@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
-# import pyaudio
+from streamlit_TTS import auto_play, text_to_audio
+import wave
 
 st.title("Text to Speech")
 
@@ -18,7 +19,16 @@ def get_tts_output():
             for chunk in response.iter_bytes(1024):
                 file.write(chunk)
 
-    st.audio("output/output.wav", "audio/wav")
+    audio = {
+        'bytes': None,
+        'sample_rate': 24000,
+        'sample_width': 2
+    }
+
+    with open('output/output.wav', 'rb') as f:
+        audio['bytes'] = f.read()
+
+    auto_play(audio, wait=True, key=None)
 
 
 
@@ -35,7 +45,6 @@ with st.form("OpenAI TTS"):
             with st.spinner("Retrieving text to speech output..."):
                 get_tts_output()
 
-    
 
 
 

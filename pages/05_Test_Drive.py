@@ -6,9 +6,10 @@ import re
 from prompts.test_drive import system_prompt, opening_message
 from functions.utils import ensure_session_state
 from openai import OpenAI
-from prompts.test_drive import opening_message, system_prompt
-from st_audiorec import st_audiorec
+from audiorecorder import audiorecorder
 from openai import OpenAI
+from streamlit_extras.bottom_container import bottom
+from streamlit_TTS import auto_play
 
 st.title("Test Drive the Course!")
 if not st.session_state.get("default_text"):
@@ -19,18 +20,65 @@ def get_latex_from_message(text):
     latex = re.findall(r"\\\(.*?\\\)|\\\[.*?\\\]", text)
     return latex
 
-def render_messages(single_message=None):
+
+def render_messages(single_message=None, button_id=None):
     if single_message:
-        with st.container():
+        with message_box.container():
             if single_message["role"] != "system":
                 with st.chat_message(single_message["role"]):
+                    spacing, tts = st.columns([0.9, 0.1])
+                    if tts.button("🔊", key=button_id):
+                        get_tts_output('alloy', single_message["content"])
                     st.markdown(single_message["content"])
     else:
-        with st.container():
-            for message in st.session_state["messages"]:
+        with message_box.container():
+            for index, message in enumerate(st.session_state["messages"]):
                 if message["role"] != "system":
-                    with st.chat_message(message["role"]):
+                    with message_box.chat_message(message["role"]):
+                        spacing, tts = st.columns([0.9, 0.1])
+                        if tts.button("🔊", key=index):
+                            get_tts_output('alloy', message["content"])
                         st.markdown(message["content"])
+
+def receive_response():
+    with message_box.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model="gpt-4o",
+             messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
+         )
+        spacing, tts = st.columns([0.9, 0.1])
+        
+        response = st.write_stream(stream)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        if tts.button("🔊", key="latest_model_response"):
+            get_tts_output('alloy', response)
+        return response
+    
+def get_tts_output(tts_voice, tts_input):
+    with client.audio.speech.with_streaming_response.create(
+        model="tts-1",
+        voice=tts_voice,
+        input=tts_input,
+        response_format="wav"
+    ) as response:
+        with open("output/output.wav", "wb") as file:
+            for chunk in response.iter_bytes(1024):
+                file.write(chunk)
+
+    audio = {
+        'bytes': None,
+        'sample_rate': 24000,
+        'sample_width': 2
+    }
+
+    with open('output/output.wav', 'rb') as f:
+        audio['bytes'] = f.read()
+
+    auto_play(audio, wait=False, key=None)
 
 
 # Check if the user is logged in
@@ -100,49 +148,41 @@ else:
                 st.error(f"Failed to send course to Nova: {response.text}")
 
     
-    # Render messages except for the system prompt
-
+    # Render messages except for the syst
+    message_box = st.container()
     render_messages()
-    
-    wav_audio_data = st_audiorec()
-    client = OpenAI()
-    sample = ""
-    if wav_audio_data is not None:
-        with open("audio_file.wav", "wb") as file:
-            file.write(wav_audio_data)
+    with bottom():
+        wav_audio_data = audiorecorder("", "")
+        chat_input = st.chat_input("Take your course for a spin!")
 
-        audio_file= open("audio_file.wav", "rb")
+    sample = None
+    client = OpenAI()
+    if len(wav_audio_data) > 0:
+        wav_audio_data.export("output/audio_file.wav", format="wav")
+
+        audio_file= open("output/audio_file.wav", "rb")
         transcription = client.audio.transcriptions.create(
         model="whisper-1", 
         file=audio_file
         )
         sample = transcription.text
-        print(sample)
+        wav_audio_data = None
 
+    
+    print(chat_input)
+    print(sample)
 
-    if (chat_input := st.chat_input("Take your course for a spin!")) or (sample != ""):
-        print(chat_input)
-        if chat_input != None:
+    if (sample or chat_input):
+        if (chat_input): 
             prompt = chat_input
-            print("aaa")
         else:
             prompt = sample
-        print(prompt)
+            sample = None
+
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        render_messages(single_message={"role": "user", "content": prompt})
-        with st.container():
-            with st.chat_message("assistant"):
-                stream = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.messages
-                    ],
-                    stream=True,
-                )
-                response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        render_messages(single_message={"role": "user", "content": prompt}, button_id=len(st.session_state["messages"]))
+        response = receive_response()
         
         # re render the most recent message with LaTeX previews
         latex_to_render = get_latex_from_message(response)
@@ -152,6 +192,5 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
-        
-    with st.sidebar:
-        st.navigation
+            
+            

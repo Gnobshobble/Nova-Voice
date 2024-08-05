@@ -1,4 +1,7 @@
 streamlit
+streamlit_extras
+streamlit_TTS
+streamlit_audiorecorder
 google-api-python-client
 requests
 Pillow

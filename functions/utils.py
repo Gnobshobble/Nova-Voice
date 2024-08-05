@@ -27,4 +27,7 @@ session_state_defaults = {
     "associations": {},
     "conversation": "",
     "messages": [],
+    "tts_voice": "alloy",
+    "tts_speed": 1.0,
+    "tts_autoplay": False
 }
