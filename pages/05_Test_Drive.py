@@ -5,10 +5,9 @@ from openai import OpenAI
 import re
 from prompts.test_drive import system_prompt, opening_message
 from functions.utils import ensure_session_state
-from openai import OpenAI
-from prompts.test_drive import opening_message, system_prompt
 from st_audiorec import st_audiorec
-from openai import OpenAI
+from requests import Request, Session
+import json
 
 st.title("Test Drive the Course!")
 if not st.session_state.get("default_text"):
@@ -124,12 +123,15 @@ else:
         print(chat_input)
         if chat_input != None:
             prompt = chat_input
-            print("aaa")
         else:
             prompt = sample
-        print(prompt)
+        s = Session()
+        data = {"prompt": prompt, "response": prompt}
+        req = Request("POST", "http://127.0.0.1:8000/new_chat/", data=data)
+        prep = req.prepare()
+        response = s.send(prep)
+        # requests.post("http://127.0.0.1:8000/new_chat/", prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
-        
         render_messages(single_message={"role": "user", "content": prompt})
         with st.container():
             with st.chat_message("assistant"):
@@ -144,6 +146,11 @@ else:
                 response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
         
+        # s2 = Session()
+        # data2 = {"response": response}
+        # req2 = Request("POST", "http://127.0.0.1:8000/new_response/", data=data2)
+        # prep2 = req2.prepare()
+        # response2 = s2.send(prep2)
         # re render the most recent message with LaTeX previews
         latex_to_render = get_latex_from_message(response)
         if latex_to_render:
@@ -152,6 +159,3 @@ else:
                 for latex in latex_to_render:
                     latex = latex[2:-2]
                     st.latex(latex)
-        
-    with st.sidebar:
-        st.navigation
