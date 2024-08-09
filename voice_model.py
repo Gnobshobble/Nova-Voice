@@ -178,8 +178,8 @@ train_dataset, val_dataset = torch.utils.data.random_split(dataset,
  [train_size, val_size])
 
 # Create data loaders
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 
 # Define the model
 # Given that you have defined the necessary components (encoder, decoder, attention, and postnet), 
@@ -194,9 +194,9 @@ class Tacotron(nn.Module):
         self.attention = attention # a second smaller model (this is closer to a discriminator in a GAN) that relates the text to the audio 
         self.num_mels = num_mels
 
-    def forward(self, text_input, mel_input):
+    def forward(self, text_input):
         # Encoder
-        encoder_outputs, _ = self.encoder(text_input)
+        encoder_outputs = self.encoder(text_input)
 
         # Decoder
         # ... decoder logic with attention and postnet ...
