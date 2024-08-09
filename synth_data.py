@@ -8,7 +8,6 @@ from tempfile import mktemp
 import sys
 sys.path.append('/path/to/ffmpeg')
 
-os.environ["OPENAI_API_KEY"] = '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'
 
 client = OpenAI()
 
